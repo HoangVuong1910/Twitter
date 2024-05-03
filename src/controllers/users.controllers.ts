@@ -22,8 +22,6 @@ export const registerController = async (
   next: NextFunction
 ) => {
   // const { email, password } = req.body
-
-  throw new Error('Lỗi rồi')
   const result = await usersService.register(req.body)
   return res.status(200).json({
     message: 'Register success',
