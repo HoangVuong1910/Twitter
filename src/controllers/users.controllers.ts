@@ -16,17 +16,17 @@ export const loginController = (req: Request, res: Response) => {
     error: 'Login failed'
   })
 }
-export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
+export const registerController = async (
+  req: Request<ParamsDictionary, any, RegisterReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
   // const { email, password } = req.body
-  try {
-    const result = await usersService.register(req.body)
-    return res.status(200).json({
-      message: 'Register success',
-      result
-    })
-  } catch (error) {
-    return res.status(400).json({
-      error: 'Register failed'
-    })
-  }
+
+  throw new Error('Lỗi rồi')
+  const result = await usersService.register(req.body)
+  return res.status(200).json({
+    message: 'Register success',
+    result
+  })
 }
