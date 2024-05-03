@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { checkSchema } from 'express-validator'
+import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import usersService from '~/services/users.services'
 
@@ -15,13 +16,18 @@ export const loginValidator = (req: Request, res: Response, next: NextFunction) 
 
 export const registerValidator = checkSchema({
   name: {
-    notEmpty: true,
-    isString: true,
+    notEmpty: {
+      errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
+    },
+    isString: {
+      errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
+    },
     isLength: {
       options: {
         min: 1,
         max: 100
-      }
+      },
+      errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
     },
     trim: true
   },
