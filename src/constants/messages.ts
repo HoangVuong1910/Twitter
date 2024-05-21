@@ -6,6 +6,13 @@ export const USERS_MESSAGES = {
   EMAIL_ALREADY_EXISTS: 'Email already exists',
   EMAIL_IS_REQUIRED: 'Email is required',
   EMAIL_IS_INVALID: 'Email is invalid',
-  EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email or password is incorrect'
+  EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email or password is incorrect',
+  ACCESS_TOKEN_IS_REQUIRED: 'Access token is required',
+  REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
+  REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
+  USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Refresh token is used or not exist',
+  LOGIN_SUCCESSFULLY: 'Login successfully',
+  REGISTER_SUCCESSFULLY: 'Register successfully',
+  LOGOUT_SUCCESSFULLY: 'Logout successfully'
   // khai báo các define lỗi cho các field khác ở đây
 } as const
