@@ -2,17 +2,50 @@ import { NextFunction, Request, Response } from 'express'
 import { checkSchema } from 'express-validator'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
+import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
+import { hashPassword } from '~/utils/crypto'
 
-export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Missing email or password'
-    })
+export const loginValidator = checkSchema({
+  email: {
+    isEmail: {
+      errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+    },
+    trim: true,
+    custom: {
+      options: async (value, { req }) => {
+        const user = await databaseService.users.findOne({ email: value, password: hashPassword(req.body.password) })
+        if (user === null) {
+          // throw new ErrorWithStatus({ message: 'Email already exists', status: 401 })
+          throw new Error(USERS_MESSAGES.EMAIL_OR_PASSWORD_IS_INCORRECT)
+        }
+        req.user = user
+        return true
+      }
+    }
+  },
+  password: {
+    notEmpty: true,
+    isString: true,
+    isLength: {
+      options: {
+        min: 6,
+        max: 50
+      }
+    },
+    isStrongPassword: {
+      options: {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+      },
+      errorMessage:
+        'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+    }
   }
-  next()
-}
+})
 
 export const registerValidator = checkSchema({
   name: {
