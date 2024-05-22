@@ -224,3 +224,47 @@ export const refreshTokenValidator = checkSchema(
   },
   ['body']
 )
+
+export const emailVerifyTokenValidator = checkSchema(
+  {
+    email_verify_token: {
+      notEmpty: {
+        errorMessage: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED
+      },
+      custom: {
+        options: async (value, { req }) => {
+          // const user = await databaseService.users.findOne({ email_verify_token: value })
+          // if (user === null) {
+          //   throw new Error(USERS_MESSAGES.EMAIL_OR_PASSWORD_IS_INCORRECT)
+          // }
+          // req.user = user
+          // return true
+          try {
+            const [decoded_email_verify_token, email_verify_token] = await Promise.all([
+              verifyToken({ token: value }),
+              databaseService.users.findOne({ email_verify_token: value })
+            ])
+            if (email_verify_token === null) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_NOT_EXIST,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
+          } catch (error) {
+            if (error instanceof JsonWebTokenError) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INVALID,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            throw error
+          }
+          return true
+        }
+      }
+    }
+  },
+
+  ['body']
+)

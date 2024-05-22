@@ -3,10 +3,11 @@ import databaseService from './database.services'
 import { RegisterReqBody } from '~/models/requests/User.requests'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
-import { TokenType } from '~/constants/enums'
+import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
+import e from 'express'
 config()
 class UsersService {
   private signAccessToken(user_id: string) {
@@ -31,6 +32,17 @@ class UsersService {
       }
     })
   }
+  private signEmailVerifyToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.EmailVerifyToken
+      },
+      options: {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN
+      }
+    })
+  }
   private signAccessAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
@@ -44,6 +56,24 @@ class UsersService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
+
+    // Fake behavior create email_verify_token
+    const email_verify_token = await this.signEmailVerifyToken(user_id)
+    await databaseService.users.updateOne(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: {
+          email_verify_token: email_verify_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    console.log('email_verify_token', email_verify_token)
+
     // return result
     return {
       access_token,
@@ -68,6 +98,49 @@ class UsersService {
   }
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
+  }
+  async verifyMail(user_id: string) {
+    // Thời điểm tạo giá trị cập nhật
+    // Thời điểm MongoDB cập nhật giá trị
+    const [token] = await Promise.all([
+      this.signAccessAndRefreshToken(user_id),
+      databaseService.users.updateOne(
+        {
+          _id: new ObjectId(user_id)
+        },
+        {
+          $set: {
+            email_verify_token: '',
+            verify: UserVerifyStatus.Verified
+            // updated_at: new Date()
+          },
+          $currentDate: {
+            updated_at: true
+          }
+        }
+      )
+    ])
+    const [access_token, refresh_token] = token
+    return {
+      access_token,
+      refresh_token
+    }
+  }
+  async resendVerifyEmailController(user_id: string) {
+    const email_verify_token = await this.signEmailVerifyToken(user_id)
+    console.log('Resend verify email', email_verify_token)
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          email_verify_token: email_verify_token
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
   }
 }
 const usersService = new UsersService()

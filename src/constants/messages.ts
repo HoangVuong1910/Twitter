@@ -13,6 +13,14 @@ export const USERS_MESSAGES = {
   USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Refresh token is used or not exist',
   LOGIN_SUCCESSFULLY: 'Login successfully',
   REGISTER_SUCCESSFULLY: 'Register successfully',
-  LOGOUT_SUCCESSFULLY: 'Logout successfully'
+  LOGOUT_SUCCESSFULLY: 'Logout successfully',
+  EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
+  EMAIL_VERIFIED_SUCCESSFULLY: 'Email verified successfully',
+  EMAIL_VERIFY_TOKEN_IS_NOT_EXIST: 'Email verify token is not exist',
+  EMAIL_VERIFY_TOKEN_IS_INVALID: 'Email verify token is invalid',
+  EMAI_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
+  USER_NOT_FOUND: 'User not found',
+  RESEND_VERIFY_EMAIL_SUCCESSFULLY: 'Resend verify email successfully'
+
   // khai báo các define lỗi cho các field khác ở đây
 } as const
