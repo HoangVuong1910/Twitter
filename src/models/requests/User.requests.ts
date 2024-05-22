@@ -18,6 +18,12 @@ export interface EmailVerifyReqBody {
 export interface ResendVerifyEmailReqBody {
   access_token: string
 }
+export interface ForgotPasswordReqBody {
+  email: string
+}
+export interface VerifyForgotPasswordReqBody {
+  forgot_password_token: string
+}
 
 export interface TokenPayload extends JwtPayload {
   user_id: string

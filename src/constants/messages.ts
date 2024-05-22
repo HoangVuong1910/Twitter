@@ -20,7 +20,11 @@ export const USERS_MESSAGES = {
   EMAIL_VERIFY_TOKEN_IS_INVALID: 'Email verify token is invalid',
   EMAI_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
   USER_NOT_FOUND: 'User not found',
-  RESEND_VERIFY_EMAIL_SUCCESSFULLY: 'Resend verify email successfully'
+  RESEND_VERIFY_EMAIL_SUCCESSFULLY: 'Resend verify email successfully',
+  CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password',
+  FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
+  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
+  VERIFY_FORGOT_PASSWORD_SUCCESSFULLY: 'Verify forgot password successfully'
 
   // khai báo các define lỗi cho các field khác ở đây
 } as const

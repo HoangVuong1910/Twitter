@@ -5,10 +5,12 @@ import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
   EmailVerifyReqBody,
+  ForgotPasswordReqBody,
   LogoutReqBody,
   RegisterReqBody,
   ResendVerifyEmailReqBody,
-  TokenPayload
+  TokenPayload,
+  VerifyForgotPasswordReqBody
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -95,8 +97,32 @@ export const resendVerifyEmailController = async (
       message: USERS_MESSAGES.EMAI_ALREADY_VERIFIED_BEFORE
     })
   }
-  await usersService.resendVerifyEmailController(user_id)
+  await usersService.resendVerifyEmail(user_id)
   return res.status(200).json({
     message: USERS_MESSAGES.RESEND_VERIFY_EMAIL_SUCCESSFULLY
+  })
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  // const { user_id } = req.decoded_authorization as TokenPayload
+  const user = req.user as User
+  const user_id = user._id as ObjectId
+  await usersService.forgotPassword(user_id.toString())
+  return res.status(200).json({
+    message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
+  })
+}
+
+export const verifyForgotPasswordController = async (
+  req: Request<ParamsDictionary, any, VerifyForgotPasswordReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  return res.status(200).json({
+    message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_SUCCESSFULLY
   })
 }

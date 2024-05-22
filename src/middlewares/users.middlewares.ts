@@ -2,10 +2,12 @@ import { NextFunction, Request, Response } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
+import { ObjectId } from 'mongodb'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
+import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
@@ -167,7 +169,10 @@ export const accessTokenValidator = checkSchema(
             })
           }
           try {
-            const decoded_authorization = await verifyToken({ token: access_token })
+            const decoded_authorization = await verifyToken({
+              token: access_token,
+              secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN
+            })
             // req.decoded_authorization = decoded_authorization
             ;(req as Request).decoded_authorization = decoded_authorization
           } catch (error) {
@@ -198,7 +203,7 @@ export const refreshTokenValidator = checkSchema(
             // const decoded_refresh_token = await verifyToken({ token: value })
             // await databaseService.refreshTokens.findOne({ token: value })
             const [decoded_refresh_token, refresh_token] = await Promise.all([
-              verifyToken({ token: value }),
+              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN }),
               databaseService.refreshTokens.findOne({ token: value })
             ])
             if (refresh_token === null) {
@@ -241,7 +246,7 @@ export const emailVerifyTokenValidator = checkSchema(
           // return true
           try {
             const [decoded_email_verify_token, email_verify_token] = await Promise.all([
-              verifyToken({ token: value }),
+              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN }),
               databaseService.users.findOne({ email_verify_token: value })
             ])
             if (email_verify_token === null) {
@@ -266,5 +271,74 @@ export const emailVerifyTokenValidator = checkSchema(
     }
   },
 
+  ['body']
+)
+
+export const forgotPasswordValidator = checkSchema(
+  {
+    email: {
+      isEmail: {
+        errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+      },
+      trim: true,
+      custom: {
+        options: async (value, { req }) => {
+          const user = await databaseService.users.findOne({ email: value })
+          if (user === null) {
+            // throw new ErrorWithStatus({ message: 'Email already exists', status: 401 })
+            throw new Error(USERS_MESSAGES.USER_NOT_FOUND)
+          }
+          req.user = user
+          return true
+        }
+      }
+    }
+  },
+  ['body']
+)
+
+export const verifyForgotPasswordTokenValidator = checkSchema(
+  {
+    forgot_password_token: {
+      trim: true,
+      custom: {
+        options: async (value, { req }) => {
+          try {
+            // const decoded_refresh_token = await verifyToken({ token: value })
+            // await databaseService.refreshTokens.findOne({ token: value })
+            const decoded_forgot_password_token = await verifyToken({
+              token: value,
+              secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN
+            })
+            const { user_id } = decoded_forgot_password_token
+            const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
+            if (user === null) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            if (user.forgot_password_token !== value) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INVALID,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            // ;(req as Request).decoded_forgot_password_token = decoded_forgot_password_token
+          } catch (err) {
+            if (err instanceof JsonWebTokenError) {
+              throw new ErrorWithStatus({
+                message: capitalize(err.message),
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            throw err
+          }
+          return true
+        }
+      }
+    }
+  },
   ['body']
 )
