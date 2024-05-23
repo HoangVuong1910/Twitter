@@ -6,7 +6,9 @@ import {
   registerController,
   resendVerifyEmailController,
   forgotPasswordController,
-  verifyForgotPasswordController
+  verifyForgotPasswordController,
+  getMeController,
+  updateMeController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
@@ -15,6 +17,8 @@ import {
   loginValidator,
   refreshTokenValidator,
   registerValidator,
+  updateMeValidator,
+  verifiedUserValidator,
   verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -66,7 +70,7 @@ usersRouter.post(
 
 /**
  * Description: Resend email when user client click on the link in resend email
- *  * Header: "Bear <access_token>"
+ * Header: "Bear <access_token>"
  * Path: /resend-verify-email
  * Method: POST
  * Body: {}
@@ -97,6 +101,31 @@ usersRouter.post(
   '/verify-forgot-password',
   validate(verifyForgotPasswordTokenValidator),
   wrapRequestHandler(verifyForgotPasswordController)
+)
+
+/**
+ * Description: Get my profile
+ * Path: /me
+ * Method: GET
+ * Header: "Bear <access_token>"
+ */
+
+usersRouter.get('/me', validate(accessTokenValidator), wrapRequestHandler(getMeController))
+
+/**
+ * Description: update my profile
+ * Path: /me
+ * Method: PATCH
+ * Header: "Bear <access_token>"
+ * Body: UserSchema
+ */
+
+usersRouter.patch(
+  '/me',
+  validate(accessTokenValidator),
+  verifiedUserValidator,
+  validate(updateMeValidator),
+  wrapRequestHandler(updateMeController)
 )
 
 export default usersRouter

@@ -10,6 +10,7 @@ import {
   RegisterReqBody,
   ResendVerifyEmailReqBody,
   TokenPayload,
+  UpdateMeReqBody,
   VerifyForgotPasswordReqBody
 } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
@@ -21,7 +22,7 @@ export const loginController = async (req: Request, res: Response) => {
   const user = req.user as User
   // console.log(user)
   const user_id = user._id as ObjectId
-  const result = await usersService.login(user_id.toString())
+  const result = await usersService.login({ user_id: user_id.toString(), verify: user.verify })
   return res.status(200).json({
     message: USERS_MESSAGES.LOGIN_SUCCESSFULLY,
     result
@@ -110,8 +111,10 @@ export const forgotPasswordController = async (
 ) => {
   // const { user_id } = req.decoded_authorization as TokenPayload
   const user = req.user as User
-  const user_id = user._id as ObjectId
-  await usersService.forgotPassword(user_id.toString())
+  // const user_id = user._id as ObjectId
+  const { _id, verify } = user
+
+  await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify })
   return res.status(200).json({
     message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
   })
@@ -124,5 +127,27 @@ export const verifyForgotPasswordController = async (
 ) => {
   return res.status(200).json({
     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_SUCCESSFULLY
+  })
+}
+
+export const getMeController = async (req: Request, res: Response, next: NextFunction) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const user = await usersService.getMe(user_id)
+  return res.status(200).json({
+    message: USERS_MESSAGES.GET_ME_SUCCESSFULLY,
+    result: user
+  })
+}
+export const updateMeController = async (
+  req: Request<ParamsDictionary, any, UpdateMeReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const body = req.body
+  const user = await usersService.updateMe(user_id, body)
+  return res.status(200).json({
+    message: USERS_MESSAGES.UPDATE_ME_SUCCESSFULLY,
+    result: user
   })
 }

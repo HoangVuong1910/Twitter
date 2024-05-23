@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express'
-import { checkSchema } from 'express-validator'
+import { ParamSchema, checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
@@ -12,6 +13,99 @@ import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
+
+const passwordSchema: ParamSchema = {
+  notEmpty: true,
+  isString: true,
+  isLength: {
+    options: {
+      min: 6,
+      max: 50
+    }
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+    },
+    errorMessage:
+      'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+  }
+}
+
+const confirmPasswordSchema: ParamSchema = {
+  notEmpty: true,
+  isString: true,
+  isLength: {
+    options: {
+      min: 6,
+      max: 50
+    }
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+    },
+    errorMessage:
+      'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
+  },
+  custom: {
+    options: (value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Password confirmation does not match password')
+      }
+      return true
+    }
+  }
+}
+
+const nameSchema: ParamSchema = {
+  notEmpty: {
+    errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
+  },
+  isString: {
+    errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
+  },
+  isLength: {
+    options: {
+      min: 1,
+      max: 100
+    },
+    errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
+  },
+  trim: true
+}
+
+const dateOfBirthSchema: ParamSchema = {
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
+    }
+  }
+}
+
+const imageSchema: ParamSchema = {
+  optional: true,
+  isString: {
+    errorMessage: USERS_MESSAGES.IMAGE_URL_MUST_BE_A_STRING
+  },
+  trim: true,
+  isLength: {
+    options: {
+      min: 1,
+      max: 400
+    },
+    errorMessage: USERS_MESSAGES.IMAGE_URL_LENGTH
+  }
+}
 
 export const loginValidator = checkSchema(
   {
@@ -32,49 +126,14 @@ export const loginValidator = checkSchema(
         }
       }
     },
-    password: {
-      notEmpty: true,
-      isString: true,
-      isLength: {
-        options: {
-          min: 6,
-          max: 50
-        }
-      },
-      isStrongPassword: {
-        options: {
-          minLength: 6,
-          minLowercase: 1,
-          minUppercase: 1,
-          minNumbers: 1,
-          minSymbols: 1
-        },
-        errorMessage:
-          'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
-      }
-    }
+    password: passwordSchema
   },
   ['body']
 )
 
 export const registerValidator = checkSchema(
   {
-    name: {
-      notEmpty: {
-        errorMessage: USERS_MESSAGES.NAME_IS_REQUIRED
-      },
-      isString: {
-        errorMessage: USERS_MESSAGES.NAME_MUST_BE_A_STRING
-      },
-      isLength: {
-        options: {
-          min: 1,
-          max: 100
-        },
-        errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
-      },
-      trim: true
-    },
+    name: nameSchema,
     email: {
       notEmpty: true,
       isEmail: true,
@@ -90,64 +149,9 @@ export const registerValidator = checkSchema(
         }
       }
     },
-    password: {
-      notEmpty: true,
-      isString: true,
-      isLength: {
-        options: {
-          min: 6,
-          max: 50
-        }
-      },
-      isStrongPassword: {
-        options: {
-          minLength: 6,
-          minLowercase: 1,
-          minUppercase: 1,
-          minNumbers: 1,
-          minSymbols: 1
-        },
-        errorMessage:
-          'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
-      }
-    },
-    confirm_password: {
-      notEmpty: true,
-      isString: true,
-      isLength: {
-        options: {
-          min: 6,
-          max: 50
-        }
-      },
-      isStrongPassword: {
-        options: {
-          minLength: 6,
-          minLowercase: 1,
-          minUppercase: 1,
-          minNumbers: 1,
-          minSymbols: 1
-        },
-        errorMessage:
-          'Password must be at least 6 characters long and contain at least 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol'
-      },
-      custom: {
-        options: (value, { req }) => {
-          if (value !== req.body.password) {
-            throw new Error('Password confirmation does not match password')
-          }
-          return true
-        }
-      }
-    },
-    date_of_birth: {
-      isISO8601: {
-        options: {
-          strict: true,
-          strictSeparator: true
-        }
-      }
-    }
+    password: passwordSchema,
+    confirm_password: confirmPasswordSchema,
+    date_of_birth: dateOfBirthSchema
   },
   ['body']
 )
@@ -339,6 +343,97 @@ export const verifyForgotPasswordTokenValidator = checkSchema(
         }
       }
     }
+  },
+  ['body']
+)
+
+export const verifiedUserValidator = async (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decoded_authorization as TokenPayload
+  if (verify !== UserVerifyStatus.Verified) {
+    // throw new ErrorWithStatus({
+    //   message: USERS_MESSAGES.USER_NOT_VERIFIED,
+    //   status: HTTP_STATUS.FORBIDDEN
+    // })
+    return next(
+      new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    )
+  }
+  next()
+}
+
+export const updateMeValidator = checkSchema(
+  {
+    name: {
+      ...nameSchema,
+      optional: true,
+      notEmpty: undefined
+    },
+    date_of_birth: {
+      ...dateOfBirthSchema,
+      optional: true,
+      notEmpty: undefined
+    },
+    bio: {
+      optional: true,
+      isString: {
+        errorMessage: USERS_MESSAGES.BIO_MUST_BE_A_STRING
+      },
+      trim: true,
+      isLength: {
+        options: {
+          min: 1,
+          max: 200
+        },
+        errorMessage: USERS_MESSAGES.BIO_LENGTH
+      }
+    },
+    location: {
+      optional: true,
+      isString: {
+        errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING
+      },
+      trim: true,
+      isLength: {
+        options: {
+          min: 1,
+          max: 200
+        },
+        errorMessage: USERS_MESSAGES.LOCATION_LENGTH
+      }
+    },
+    website: {
+      optional: true,
+      isString: {
+        errorMessage: USERS_MESSAGES.WEBSITE_MUST_BE_A_STRING
+      },
+      trim: true,
+      isLength: {
+        options: {
+          min: 1,
+          max: 200
+        },
+        errorMessage: USERS_MESSAGES.WEBSITE_LENGTH
+      }
+    },
+    username: {
+      optional: true,
+      isString: {
+        errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_A_STRING
+      },
+      trim: true,
+      isLength: {
+        options: {
+          min: 1,
+          max: 50
+        },
+        errorMessage: USERS_MESSAGES.USERNAME_LENGTH
+      }
+    },
+    avatar: imageSchema,
+    cover_photo: imageSchema
   },
   ['body']
 )

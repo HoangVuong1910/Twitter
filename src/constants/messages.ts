@@ -24,7 +24,20 @@ export const USERS_MESSAGES = {
   CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password',
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
   FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
-  VERIFY_FORGOT_PASSWORD_SUCCESSFULLY: 'Verify forgot password successfully'
+  VERIFY_FORGOT_PASSWORD_SUCCESSFULLY: 'Verify forgot password successfully',
+  GET_ME_SUCCESSFULLY: 'Get my profile successfully',
+  USER_NOT_VERIFIED: 'User not verified',
+  BIO_MUST_BE_A_STRING: 'Bio must be a string',
+  BIO_LENGTH: 'Bio length muse be from 1 to 200',
+  LOCATION_MUST_BE_A_STRING: 'Location must be a string',
+  LOCATION_LENGTH: 'Location length muse be from 1 to 200',
+  WEBSITE_MUST_BE_A_STRING: 'Website must be a string',
+  WEBSITE_LENGTH: 'Website length muse be from 1 to 200',
+  USERNAME_MUST_BE_A_STRING: 'Usernme must be a string',
+  USERNAME_LENGTH: 'Usernme length muse be from 1 to 50',
+  IMAGE_URL_MUST_BE_A_STRING: 'Image url must be a string',
+  IMAGE_URL_LENGTH: 'Image url length muse be from 1 to 400',
+  UPDATE_ME_SUCCESSFULLY: 'Update my profile successfully'
 
   // khai báo các define lỗi cho các field khác ở đây
 } as const
