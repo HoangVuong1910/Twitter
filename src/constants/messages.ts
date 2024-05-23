@@ -37,7 +37,8 @@ export const USERS_MESSAGES = {
   USERNAME_LENGTH: 'Usernme length muse be from 1 to 50',
   IMAGE_URL_MUST_BE_A_STRING: 'Image url must be a string',
   IMAGE_URL_LENGTH: 'Image url length muse be from 1 to 400',
-  UPDATE_ME_SUCCESSFULLY: 'Update my profile successfully'
+  UPDATE_ME_SUCCESSFULLY: 'Update my profile successfully',
+  GET_USER_PROFILE_SUCCESSFULLY: 'Get user profile successfully'
 
   // khai báo các define lỗi cho các field khác ở đây
 } as const

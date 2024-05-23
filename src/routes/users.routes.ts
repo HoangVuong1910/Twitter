@@ -8,8 +8,10 @@ import {
   forgotPasswordController,
   verifyForgotPasswordController,
   getMeController,
-  updateMeController
+  updateMeController,
+  getProfileController
 } from '~/controllers/users.controllers'
+import { filterBodyMiddleware } from '~/middlewares/common.middlewares'
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
@@ -21,6 +23,7 @@ import {
   verifiedUserValidator,
   verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
+import { UpdateMeReqBody } from '~/models/requests/User.requests'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { validate } from '~/utils/validation'
 const usersRouter = Router()
@@ -124,8 +127,26 @@ usersRouter.patch(
   '/me',
   validate(accessTokenValidator),
   verifiedUserValidator,
+  filterBodyMiddleware<UpdateMeReqBody>([
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'username',
+    'avatar',
+    'cover_photo'
+  ]),
   validate(updateMeValidator),
   wrapRequestHandler(updateMeController)
 )
+
+/**
+ * Description: Get user profile
+ * Path: /:username
+ * Method: GET
+ */
+
+usersRouter.get('/:username', wrapRequestHandler(getProfileController))
 
 export default usersRouter
