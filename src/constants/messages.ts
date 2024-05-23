@@ -34,7 +34,7 @@ export const USERS_MESSAGES = {
   WEBSITE_MUST_BE_A_STRING: 'Website must be a string',
   WEBSITE_LENGTH: 'Website length muse be from 1 to 200',
   USERNAME_MUST_BE_A_STRING: 'Usernme must be a string',
-  USERNAME_LENGTH: 'Usernme length muse be from 1 to 50',
+  USERNAME_INVALID: 'Username must be 4-15 characters long and contain only letters, numbers and underscores',
   IMAGE_URL_MUST_BE_A_STRING: 'Image url must be a string',
   IMAGE_URL_LENGTH: 'Image url length muse be from 1 to 400',
   UPDATE_ME_SUCCESSFULLY: 'Update my profile successfully',
@@ -43,7 +43,10 @@ export const USERS_MESSAGES = {
   INCORRECT_FORMAT_OBJECT_ID: 'Incorrect format ObjectId',
   USER_IS_FOLLOWED_BEFORE: 'User is followed before',
   USER_IS_NOT_FOLLOWED_BEFORE: 'User is not followed before',
-  UNFOLLOW_SUCCESSFULLY: 'Unfollow successfully'
+  UNFOLLOW_SUCCESSFULLY: 'Unfollow successfully',
+  USERNAME_EXISTED: 'Username existed',
+  OLD_PASSWORD_NOT_MATCH: 'Old password not match',
+  CHANGE_PASSWORD_SUCCESSFULLY: 'Change password successfully'
 
   // khai báo các define lỗi cho các field khác ở đây
 } as const
