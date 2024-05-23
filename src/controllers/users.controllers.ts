@@ -5,12 +5,14 @@ import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
   EmailVerifyReqBody,
+  FollowReqBody,
   ForgotPasswordReqBody,
   GetProfileReqParams,
   LogoutReqBody,
   RegisterReqBody,
   ResendVerifyEmailReqBody,
   TokenPayload,
+  UnfollowReqParams,
   UpdateMeReqBody,
   VerifyForgotPasswordReqBody
 } from '~/models/requests/User.requests'
@@ -156,10 +158,29 @@ export const updateMeController = async (
 
 export const getProfileController = async (req: Request, res: Response, next: NextFunction) => {
   const { username } = req.params
-  console.log(username)
+  console.log('checkusername', username)
   const user = await usersService.getProfile(username)
   return res.status(200).json({
     message: USERS_MESSAGES.GET_USER_PROFILE_SUCCESSFULLY,
     result: user
   })
+}
+
+export const followController = async (
+  req: Request<ParamsDictionary, any, FollowReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { followed_user_id } = req.body
+  const result = await usersService.follow(user_id, followed_user_id)
+  return res.status(200).json(result)
+}
+
+export const UnfollowController = async (req: Request, res: Response, next: NextFunction) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const { followed_user_id } = req.params
+
+  const result = await usersService.Unfollow(user_id, followed_user_id)
+  return res.status(200).json(result)
 }

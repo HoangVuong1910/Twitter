@@ -107,6 +107,24 @@ const imageSchema: ParamSchema = {
   }
 }
 
+const followedUserIdSchema: ParamSchema = {
+  custom: {
+    options: async (value: string, { req }) => {
+      if (!ObjectId.isValid(value)) {
+        throw new ErrorWithStatus({
+          message: USERS_MESSAGES.INCORRECT_FORMAT_OBJECT_ID,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      const followed_user = await databaseService.users.findOne({ _id: new ObjectId(value) })
+      console.log('check follow user:', followed_user)
+      if (followed_user === null) {
+        throw new ErrorWithStatus({ message: USERS_MESSAGES.USER_NOT_FOUND, status: HTTP_STATUS.NOT_FOUND })
+      }
+    }
+  }
+}
+
 export const loginValidator = checkSchema(
   {
     email: {
@@ -437,3 +455,14 @@ export const updateMeValidator = checkSchema(
   },
   ['body']
 )
+
+export const followValidator = checkSchema(
+  {
+    followed_user_id: followedUserIdSchema
+  },
+  ['body']
+)
+
+export const UnfollowValidator = checkSchema({
+  followed_user_id: followedUserIdSchema
+})

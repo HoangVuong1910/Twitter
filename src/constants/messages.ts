@@ -38,7 +38,12 @@ export const USERS_MESSAGES = {
   IMAGE_URL_MUST_BE_A_STRING: 'Image url must be a string',
   IMAGE_URL_LENGTH: 'Image url length muse be from 1 to 400',
   UPDATE_ME_SUCCESSFULLY: 'Update my profile successfully',
-  GET_USER_PROFILE_SUCCESSFULLY: 'Get user profile successfully'
+  GET_USER_PROFILE_SUCCESSFULLY: 'Get user profile successfully',
+  FOLLOW_SUCCESSFULLY: 'Follow successfully',
+  INCORRECT_FORMAT_OBJECT_ID: 'Incorrect format ObjectId',
+  USER_IS_FOLLOWED_BEFORE: 'User is followed before',
+  USER_IS_NOT_FOLLOWED_BEFORE: 'User is not followed before',
+  UNFOLLOW_SUCCESSFULLY: 'Unfollow successfully'
 
   // khai báo các define lỗi cho các field khác ở đây
 } as const

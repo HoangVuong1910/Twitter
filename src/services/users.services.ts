@@ -8,6 +8,8 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
 import e from 'express'
+import { Follower } from '~/models/schemas/Follower.schema'
+import { USERS_MESSAGES } from '~/constants/messages'
 config()
 class UsersService {
   private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -250,6 +252,45 @@ class UsersService {
       }
     )
     return user
+  }
+
+  async follow(user_id: string, followed_user_id: string) {
+    const follower = await databaseService.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    // Kiểm tra nếu đã follow người đó rồi thì trả về OK kèm theo message là đã follow
+    if (follower !== null) {
+      return {
+        message: USERS_MESSAGES.USER_IS_FOLLOWED_BEFORE
+      }
+    }
+    await databaseService.followers.insertOne(
+      new Follower({ user_id: new ObjectId(user_id), followed_user_id: new ObjectId(followed_user_id) })
+    )
+    return {
+      message: USERS_MESSAGES.FOLLOW_SUCCESSFULLY
+    }
+  }
+
+  async Unfollow(user_id: string, followed_user_id: string) {
+    const follower = await databaseService.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    // Kiểm tra nếu chưa follow người đó rồi mà ấn unfollow thì trả về OK kèm theo message người dùng chưa được follow trước đó
+    if (follower === null) {
+      return {
+        message: USERS_MESSAGES.USER_IS_NOT_FOLLOWED_BEFORE
+      }
+    }
+    await databaseService.followers.deleteOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+    return {
+      message: USERS_MESSAGES.UNFOLLOW_SUCCESSFULLY
+    }
   }
 }
 const usersService = new UsersService()
