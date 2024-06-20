@@ -10,6 +10,9 @@ import { config } from 'dotenv'
 import e from 'express'
 import { Follower } from '~/models/schemas/Follower.schema'
 import { USERS_MESSAGES } from '~/constants/messages'
+import axios from 'axios'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 config()
 class UsersService {
   private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -121,7 +124,7 @@ class UsersService {
     }
   }
   async checkEmailExist(email: string) {
-    const user = await databaseService.users.findOne({ email })
+    const user = await databaseService.users.findOne({ email: email })
     return Boolean(user)
   }
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -136,6 +139,103 @@ class UsersService {
       refresh_token
     }
   }
+
+  private async getOauthGoogleToken(code: string) {
+    const body = {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      grant_type: 'authorization_code'
+    }
+    const { data } = await axios.post('https://oauth2.googleapis.com/token', body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+    return data as {
+      access_token: string
+      id_token: string
+    }
+    // data return value:
+    /*
+    {
+      access_token: 'ya29.a0AXooCgu23Zf0BWjFVTme6o2IsIni-euCSl_QbvM42in-wKzPdt0t0u1h1kzsd1xeXhNy3bhk6b4eCqO9e',
+      expires_in: 3599,
+      refresh_token: '1//0eKMU7DwxJIQQCgYIARAAGA4SNwF-L9IracCjNkHEGHo6lAhN1O1e4xEm4rQYjpzdEjtz1_4S_nSLtCdBhyK7Af6ddeYc6_pp1kk',
+      scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
+      token_type: 'Bearer',
+      id_token: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjNkNTgwZjBhZjdhY2U2OThhMGNlZTdmMjMwYmNhNTk0ZGM2ZGJiNTUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOi' 
+    }
+    */
+  }
+  private async getGoogleUserInfo(id_token: string, access_token: string) {
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+      params: {
+        access_token,
+        alt: 'json'
+      },
+      headers: {
+        Authorization: `Bear ${id_token}`
+      }
+    })
+    /*
+    data return value:
+    {
+      id: '115192250171432087121',
+      email: 'hoangdaden2003@gmail.com',
+      verified_email: true,
+      name: 'Huy Hoàng Vương',
+      given_name: 'Huy Hoàng',
+      family_name: 'Vương',
+      picture: 'https://lh3.googleusercontent.com/a/ACg8ocKj7Pn-2o3-zCJHewzjzbVR_wSKU_GMtwlfTLJNkbm_tqq_iw=s96-c'
+    }
+    */
+    return data as {
+      email: string
+      verified_email: boolean
+      name: string
+      given_name: string
+      family_name: string
+      picture: string
+    }
+  }
+  async oauthLogin(code: string) {
+    const { id_token, access_token } = await this.getOauthGoogleToken(code)
+    const userInfo = await this.getGoogleUserInfo(id_token, access_token)
+    if (!userInfo.verified_email) {
+      throw new ErrorWithStatus({ message: USERS_MESSAGES.GMAIL_IS_NOT_VERIFIED, status: HTTP_STATUS.BAD_REQUEST })
+    }
+    // Kiểm tra email được đăng ký chưa
+    const user = await databaseService.users.findOne({ email: userInfo.email })
+    // Nếu tồn tại thì cho login vào
+    if (user) {
+      const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+        user_id: user._id.toString(),
+        verify: user.verify
+      })
+      await databaseService.refreshTokens.insertOne(new RefreshToken({ user_id: user._id, token: refresh_token }))
+      // return result
+
+      return {
+        access_token,
+        refresh_token,
+        newUser: false
+      }
+    } else {
+      // không tồn tại user thì tạo mới <=> đăng ký
+      const password = Math.random().toString(36).substring(2, 15)
+      const data = await this.register({
+        email: userInfo.email,
+        name: userInfo.name,
+        date_of_birth: new Date().toISOString(),
+        password: password,
+        confirm_password: password
+      })
+      return { ...data, newUser: false }
+    }
+  }
+
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
   }

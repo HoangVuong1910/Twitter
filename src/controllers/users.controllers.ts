@@ -33,6 +33,14 @@ export const loginController = async (req: Request, res: Response) => {
     result
   })
 }
+
+export const oauthLoginController = async (req: Request, res: Response) => {
+  const { code } = req.query
+  const result = await usersService.oauthLogin(code as string)
+  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&newUser=${result.newUser}`
+  return res.redirect(urlRedirect)
+}
+
 export const registerController = async (
   req: Request<ParamsDictionary, any, RegisterReqBody>,
   res: Response,

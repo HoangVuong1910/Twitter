@@ -158,7 +158,8 @@ export const registerValidator = checkSchema(
       isEmail: true,
       trim: true,
       custom: {
-        options: async (value) => {
+        options: async (value, { req }) => {
+          console.log(req.body)
           const result = await usersService.checkEmailExist(value)
           if (result) {
             // throw new ErrorWithStatus({ message: 'Email already exists', status: 401 })
@@ -194,7 +195,7 @@ export const accessTokenValidator = checkSchema(
           try {
             const decoded_authorization = await verifyToken({
               token: access_token,
-              secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN
+              secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
             })
             // req.decoded_authorization = decoded_authorization
             ;(req as Request).decoded_authorization = decoded_authorization
@@ -226,7 +227,7 @@ export const refreshTokenValidator = checkSchema(
             // const decoded_refresh_token = await verifyToken({ token: value })
             // await databaseService.refreshTokens.findOne({ token: value })
             const [decoded_refresh_token, refresh_token] = await Promise.all([
-              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN }),
+              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }),
               databaseService.refreshTokens.findOne({ token: value })
             ])
             if (refresh_token === null) {
@@ -269,7 +270,7 @@ export const emailVerifyTokenValidator = checkSchema(
           // return true
           try {
             const [decoded_email_verify_token, email_verify_token] = await Promise.all([
-              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN }),
+              verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string }),
               databaseService.users.findOne({ email_verify_token: value })
             ])
             if (email_verify_token === null) {
@@ -331,7 +332,7 @@ export const verifyForgotPasswordTokenValidator = checkSchema(
             // await databaseService.refreshTokens.findOne({ token: value })
             const decoded_forgot_password_token = await verifyToken({
               token: value,
-              secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN
+              secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
             })
             const { user_id } = decoded_forgot_password_token
             const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })

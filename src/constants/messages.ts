@@ -46,7 +46,6 @@ export const USERS_MESSAGES = {
   UNFOLLOW_SUCCESSFULLY: 'Unfollow successfully',
   USERNAME_EXISTED: 'Username existed',
   OLD_PASSWORD_NOT_MATCH: 'Old password not match',
-  CHANGE_PASSWORD_SUCCESSFULLY: 'Change password successfully'
-
-  // khai báo các define lỗi cho các field khác ở đây
+  CHANGE_PASSWORD_SUCCESSFULLY: 'Change password successfully',
+  GMAIL_IS_NOT_VERIFIED: 'Gmail is not verified'
 } as const
