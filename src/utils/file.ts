@@ -12,13 +12,14 @@ export const initUploadFolder = () => {
   }
 }
 
-export const handleUploadSingleImage = async (req: Request) => {
+export const handleUploadImage = async (req: Request) => {
   const formidable = (await import('formidable')).default
   const form = formidable({
     uploadDir: UPLOAD_TEMP_DIR, // Thư mục chứa file uploads là D:\Projects\Twitter\uploads\temp
     keepExtensions: true, // Nếu là true thì sẽ lấy luôn đuôi mở rộng của file upload
-    maxFiles: 1, // số lượng file tối đa upload
-    maxFileSize: 300 * 1024, // 300kb (kích thước tối đa của file, quy đổi ra byte)
+    maxFiles: 4, // số lượng file tối đa upload
+    maxFileSize: 3000 * 1024, // 3000kb (kích thước tối đa của file, quy đổi ra byte)
+    maxTotalFileSize: 3000 * 1024 * 4, // (mỗi file kích thước là 3mb tổng 12mb)
     filter: function ({ name, originalFilename, mimetype }) {
       const valid = name === 'image' && Boolean(mimetype?.includes('image/'))
       if (!valid) {
@@ -27,7 +28,7 @@ export const handleUploadSingleImage = async (req: Request) => {
       return valid
     }
   })
-  return new Promise<File>((resolve, reject) => {
+  return new Promise<File[]>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         reject(err)
@@ -38,7 +39,7 @@ export const handleUploadSingleImage = async (req: Request) => {
       if (!Boolean(files.image)) {
         return reject(new Error('File is empty'))
       }
-      resolve((files.image as File[])[0])
+      resolve(files.image as File[])
     })
   })
 }
