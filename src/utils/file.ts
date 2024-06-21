@@ -1,0 +1,50 @@
+import { Request } from 'express'
+import { File } from 'formidable'
+import fs from 'fs'
+import path from 'path'
+import { UPLOAD_TEMP_DIR } from '~/constants/dir'
+
+export const initUploadFolder = () => {
+  if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
+    fs.mkdirSync(UPLOAD_TEMP_DIR, {
+      recursive: true // option để tạo thư mục nested
+    })
+  }
+}
+
+export const handleUploadSingleImage = async (req: Request) => {
+  const formidable = (await import('formidable')).default
+  const form = formidable({
+    uploadDir: UPLOAD_TEMP_DIR, // Thư mục chứa file uploads là D:\Projects\Twitter\uploads\temp
+    keepExtensions: true, // Nếu là true thì sẽ lấy luôn đuôi mở rộng của file upload
+    maxFiles: 1, // số lượng file tối đa upload
+    maxFileSize: 300 * 1024, // 300kb (kích thước tối đa của file, quy đổi ra byte)
+    filter: function ({ name, originalFilename, mimetype }) {
+      const valid = name === 'image' && Boolean(mimetype?.includes('image/'))
+      if (!valid) {
+        form.emit('error' as any, new Error('File type ís not valid') as any)
+      }
+      return valid
+    }
+  })
+  return new Promise<File>((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        reject(err)
+      }
+      // trường hợp không upload file ảnh gì hết thì err sẽ trả về null, do đó không reject được error nên vẫn trả về status 200
+      // check empty file upload:
+      // eslint-disable-next-line no-extra-boolean-cast
+      if (!Boolean(files.image)) {
+        return reject(new Error('File is empty'))
+      }
+      resolve((files.image as File[])[0])
+    })
+  })
+}
+
+export const getNameFromFullname = (fullname: string) => {
+  const nameArray = fullname.split('.')
+  nameArray.pop()
+  return nameArray.join('')
+}
