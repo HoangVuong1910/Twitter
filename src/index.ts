@@ -6,7 +6,7 @@ import mediasRouter from './routes/medias.routes'
 import { initUploadFolder } from './utils/file'
 import { config } from 'dotenv'
 import path from 'path'
-import { UPLOAD_DIR } from './constants/dir'
+import { UPLOAD_IMAGE_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
 config()
 databaseService.connect()
@@ -21,7 +21,7 @@ app.use('/v1/api/users', usersRouter)
 app.use('/v1/api/medias', mediasRouter)
 
 // Serving file
-// app.use('/static', express.static(UPLOAD_DIR)) // UPLOAD_DIR = path.resolve('uploads')
+// app.use('/static', express.static(UPLOAD_IMAGE_DIR)) // UPLOAD_IMAGE_DIR = path.resolve('uploads')
 app.use('/v1/api/static', staticRouter)
 
 // Xử lý Error Handler
