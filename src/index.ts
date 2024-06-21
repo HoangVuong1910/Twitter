@@ -5,6 +5,9 @@ import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/medias.routes'
 import { initUploadFolder } from './utils/file'
 import { config } from 'dotenv'
+import path from 'path'
+import { UPLOAD_DIR } from './constants/dir'
+import staticRouter from './routes/static.routes'
 config()
 databaseService.connect()
 const app = express()
@@ -16,6 +19,11 @@ initUploadFolder()
 app.use(express.json())
 app.use('/v1/api/users', usersRouter)
 app.use('/v1/api/medias', mediasRouter)
+
+// Serving file
+// app.use('/static', express.static(UPLOAD_DIR)) // UPLOAD_DIR = path.resolve('uploads')
+app.use('/v1/api/static', staticRouter)
+
 // Xử lý Error Handler
 app.use(defaultErrorHandler)
 
