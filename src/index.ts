@@ -9,7 +9,9 @@ import path from 'path'
 import { UPLOAD_IMAGE_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
 config()
-databaseService.connect()
+databaseService.connect().then(() => {
+  databaseService.indexUsers()
+})
 const app = express()
 const port = process.env.PORT || 3056
 
