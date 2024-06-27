@@ -10,6 +10,7 @@ import { UPLOAD_IMAGE_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRoute from './routes/bookmarks.routes'
+import likesRoute from './routes/likes.routes'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()
@@ -29,6 +30,7 @@ app.use('/v1/api/users', usersRouter)
 app.use('/v1/api/medias', mediasRouter)
 app.use('/v1/api/tweets', tweetsRouter)
 app.use('/v1/api/bookmarks', bookmarksRoute)
+app.use('/v1/api/likes', likesRoute)
 
 // Serving file
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR)) // UPLOAD_IMAGE_DIR = path.resolve('uploads')
