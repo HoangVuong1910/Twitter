@@ -12,6 +12,7 @@ const tweetsRouter = Router()
  * Path: /
  * Method: POST
  * Body: TweetRequestBody
+ * Header: {Authorization: Bear <access_token>}
  */
 tweetsRouter.post(
   '/',
