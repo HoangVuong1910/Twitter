@@ -222,9 +222,6 @@ export const tweetIdValidator = checkSchema(
                         }
                       }
                     }
-                  },
-                  view_count: {
-                    $add: ['$user_views', '$guest_views']
                   }
                 }
               },
