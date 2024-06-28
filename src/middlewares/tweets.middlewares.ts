@@ -84,8 +84,8 @@ export const createTweetValidator = checkSchema({
     isArray: true,
     custom: {
       options: (value, { req }) => {
-        // Yêu cầu mỗi phần tử trong array phải là user_id
-        if (value.some((item: any) => !ObjectId.isValid(value))) {
+        // Yêu cầu mỗi phần tử trong array phải là string
+        if (value.some((item: any) => typeof item !== 'string')) {
           throw new Error(TWEETS_MESSAGES.MENTIONS_MUST_BE_AN_ARRAY_OF_USER_ID)
         }
         return true
@@ -118,11 +118,127 @@ export const tweetIdValidator = checkSchema(
           if (!ObjectId.isValid(value)) {
             throw new ErrorWithStatus({ message: TWEETS_MESSAGES.INVALID_TWEET_ID, status: HTTP_STATUS.BAD_REQUEST })
           }
-          const tweet = await databaseService.tweets.findOne({ _id: new ObjectId(value) })
+          // const tweet = await databaseService.tweets.findOne({ _id: new ObjectId(value) })
+          const [tweet] = await databaseService.tweets
+            .aggregate<Tweet>([
+              {
+                $match: {
+                  _id: new ObjectId('667da3c02e6af80ade7a7799')
+                }
+              },
+              {
+                $lookup: {
+                  from: 'hashtags',
+                  localField: 'hashtags',
+                  foreignField: '_id',
+                  as: 'hashtags'
+                }
+              },
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'mentions',
+                  foreignField: '_id',
+                  as: 'mentions'
+                }
+              },
+              {
+                $addFields: {
+                  mentions: {
+                    $map: {
+                      input: '$mentions',
+                      as: 'mention',
+                      in: {
+                        _id: '$$mention._id',
+                        name: '$$mention.name',
+                        username: '$$mention.username',
+                        email: '$$mention.email'
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                $lookup: {
+                  from: 'bookmarks',
+                  localField: '_id',
+                  foreignField: 'tweet_id',
+                  as: 'bookmarks'
+                }
+              },
+              {
+                $lookup: {
+                  from: 'likes',
+                  localField: '_id',
+                  foreignField: 'tweet_id',
+                  as: 'likes'
+                }
+              },
+              {
+                $lookup: {
+                  from: 'tweets',
+                  localField: '_id',
+                  foreignField: 'parent_id',
+                  as: 'tweet_children'
+                }
+              },
+              {
+                $addFields: {
+                  bookmarks: {
+                    $size: '$bookmarks'
+                  },
+                  likes: {
+                    $size: '$likes'
+                  },
+                  retweet_count: {
+                    $size: {
+                      $filter: {
+                        input: '$tweet_children',
+                        as: 'item',
+                        cond: {
+                          $eq: ['$$item.type', 1]
+                        }
+                      }
+                    }
+                  },
+                  comment_count: {
+                    $size: {
+                      $filter: {
+                        input: '$tweet_children',
+                        as: 'item',
+                        cond: {
+                          $eq: ['$$item.type', 2]
+                        }
+                      }
+                    }
+                  },
+                  quote_count: {
+                    $size: {
+                      $filter: {
+                        input: '$tweet_children',
+                        as: 'item',
+                        cond: {
+                          $eq: ['$$item.type', 3]
+                        }
+                      }
+                    }
+                  },
+                  view_count: {
+                    $add: ['$user_views', '$guest_views']
+                  }
+                }
+              },
+              {
+                $project: {
+                  tweet_children: 0
+                }
+              }
+            ])
+            .toArray()
           if (!tweet) {
             throw new ErrorWithStatus({ message: TWEETS_MESSAGES.TWEET_NOT_FOUND, status: HTTP_STATUS.NOT_FOUND })
           }
-          req.tweet = tweet
+          ;(req as Request).tweet = tweet
           return true
         }
       }

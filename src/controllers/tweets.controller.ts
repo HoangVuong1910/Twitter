@@ -19,10 +19,11 @@ export const createTweetController = async (
 }
 
 export const getTweetController = async (req: Request, res: Response, next: NextFunction) => {
-  const tweet_id = req.params.tweet_id
-  const tweet = await tweetsService.getTweet(tweet_id)
+  // const tweet_id = req.params.tweet_id
+  // không nên xử lý query ở đây vì trước đó validator đã query 1 lần
+  // const tweet = await tweetsService.getTweet(tweet_id)
   return res.json({
     message: TWEETS_MESSAGES.GET_TWEET_SUCCESSFULLY,
-    result: tweet
+    result: req.tweet
   })
 }
