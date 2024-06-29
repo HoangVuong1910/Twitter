@@ -11,6 +11,7 @@ import staticRouter from './routes/static.routes'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRoute from './routes/bookmarks.routes'
 import likesRoute from './routes/likes.routes'
+import searchRouter from './routes/search.routes'
 // import '~/utils/fake'
 config()
 databaseService.connect().then(() => {
@@ -32,6 +33,7 @@ app.use('/v1/api/medias', mediasRouter)
 app.use('/v1/api/tweets', tweetsRouter)
 app.use('/v1/api/bookmarks', bookmarksRoute)
 app.use('/v1/api/likes', likesRoute)
+app.use('/v1/api/search', searchRouter)
 
 // Serving file
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR)) // UPLOAD_IMAGE_DIR = path.resolve('uploads')
