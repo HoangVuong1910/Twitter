@@ -80,5 +80,8 @@ export const LIKES_MESSAGES = {
 } as const
 
 export const SEARCH_MESSAGES = {
-  SEARCH_SUCCESSFULLY: 'Search succesfully'
+  SEARCH_SUCCESSFULLY: 'Search succesfully',
+  CONTENT_MUST_BE_A_STRING: 'Content must be a string',
+  MEDIA_TYPE_MUST_BE_A_IMAGE_OR_VIDEO: 'Media type must be a image or video',
+  PEOPLE_FOLLOW_MUST_BE_AN_0_OR_1: 'People follow must be an 0 or'
 } as const
