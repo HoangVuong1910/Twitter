@@ -65,7 +65,8 @@ export const TWEETS_MESSAGES = {
   INVALID_TWEET_ID: 'Invalid Tweet id',
   TWEET_NOT_FOUND: 'Tweet not found',
   TWEET_IS_NOT_PUBLIC: 'Tweet is not public',
-  GET_TWEET_SUCCESSFULLY: 'Get Tweet Successfully'
+  GET_TWEET_SUCCESSFULLY: 'Get Tweet Successfully',
+  GET_NEW_FEEDS_SUCCESSFULLY: 'Get new feeds successfully'
 } as const
 
 export const BOOKMARKS_MESSAGES = {
@@ -76,4 +77,8 @@ export const BOOKMARKS_MESSAGES = {
 export const LIKES_MESSAGES = {
   LIKE_TWEET_SUCCESSFULLY: 'Like Tweet Successfuly',
   UNLIKE_TWEET_SUCCESSFULLY: 'Unlike Tweet Successfuly'
+} as const
+
+export const SEARCH_MESSAGES = {
+  SEARCH_SUCCESSFULLY: 'Search succesfully'
 } as const
