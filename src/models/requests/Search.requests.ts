@@ -1,7 +1,8 @@
 import { MediaTypeQuery } from '~/constants/enums'
 import { Pagination } from './Tweet.requests'
-
-export default interface SearchQuery extends Pagination {
+import { Query } from 'express-serve-static-core'
+export default interface SearchQuery extends Pagination, Query {
   content: string
   media_type: MediaTypeQuery
+  people_follow: string
 }

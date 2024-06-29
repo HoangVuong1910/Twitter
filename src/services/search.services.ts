@@ -9,13 +9,15 @@ class SearchService {
     limit,
     page,
     user_id,
-    media_type
+    media_type,
+    people_follow
   }: {
     content: string
     limit: number
     page: number
     user_id: string
-    media_type: MediaTypeQuery
+    media_type?: MediaTypeQuery
+    people_follow?: string
   }) {
     // const result = await databaseService.tweets
     //   .find({ $text: { $search: content } })
@@ -42,6 +44,27 @@ class SearchService {
           break
         default:
           break
+      }
+    }
+    if (people_follow && people_follow === '1') {
+      const user_id_obj = new ObjectId(user_id)
+      // lấy ra toàn bộ follower của user đó
+      const followed_user_ids = await databaseService.followers
+        .find(
+          { user_id: user_id_obj },
+          {
+            projection: {
+              followed_user_id: 1,
+              _id: 0
+            }
+          }
+        )
+        .toArray()
+      const ids = followed_user_ids.map((item) => item.followed_user_id)
+      // đẩy luôn user id vào danh sách, bởi vì các newfeeds sẽ hiện các tweet của các follower của user đó và các tweet của chính user đó luôn
+      ids.push(user_id_obj)
+      $match['user_id'] = {
+        $in: ids
       }
     }
     const [tweets, total] = await Promise.all([
@@ -280,7 +303,7 @@ class SearchService {
 
     return {
       tweets,
-      total: total[0].total
+      total: total[0]?.total || 0
     }
   }
 }
