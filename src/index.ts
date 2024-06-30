@@ -13,6 +13,8 @@ import bookmarksRoute from './routes/bookmarks.routes'
 import likesRoute from './routes/likes.routes'
 import searchRouter from './routes/search.routes'
 // import '~/utils/fake'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()
@@ -21,6 +23,8 @@ databaseService.connect().then(() => {
   databaseService.indexTweets()
 })
 const app = express()
+const httpServer = createServer(app)
+
 const port = process.env.PORT || 3056
 
 // Khởi tạo folder uploads
@@ -43,6 +47,20 @@ app.use('/v1/api/static', staticRouter)
 // Xử lý Error Handler
 app.use(defaultErrorHandler)
 
-app.listen(port, () => {
+// socket.io
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log(`user ${socket.id} connected`)
+  socket.on('disconnect', () => {
+    console.log(`user ${socket.id} disconnected`)
+  })
+})
+
+httpServer.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })

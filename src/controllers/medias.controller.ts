@@ -18,7 +18,8 @@ export const serveImageController = (req: Request, res: Response, next: NextFunc
   const { name } = req.params
   return res.sendFile(path.resolve(UPLOAD_IMAGE_DIR, name), (err) => {
     if (err) {
-      res.status((err as any).status).send('Not found')
+      throw new Error(err.message)
+      // res.status((err as any).status).send('Not found')
     }
   })
 }
@@ -35,7 +36,8 @@ export const serveVideoController = (req: Request, res: Response, next: NextFunc
   const { name } = req.params
   return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, name), (err) => {
     if (err) {
-      res.status((err as any).status).send('Not found')
+      throw new Error(err.message)
+      // res.status((err as any).status).send('Not found')
     }
   })
 }
