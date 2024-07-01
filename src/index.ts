@@ -67,6 +67,33 @@ const io = new Server(httpServer, {
   }
 })
 const users: { [key: string]: { socket_id: string } } = {}
+
+// middleware server instance
+io.use(async (socket, next) => {
+  const { Authorization } = socket.handshake.auth
+  const access_token = Authorization?.split(' ')[1]
+  try {
+    const decoded_authorization = await verifyAccessToken(access_token)
+    const { verify } = decoded_authorization as TokenPayload
+    if (verify !== UserVerifyStatus.Verified) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    }
+    // truyền data vào socket để sử dụng ở các middleware khác
+    socket.handshake.auth.decoded_authorization = decoded_authorization
+    socket.handshake.auth.access_token = access_token
+    next()
+  } catch (error) {
+    next({
+      message: 'Unauthorized',
+      name: 'UnauthorizedError',
+      data: error
+    })
+  }
+})
+
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`)
   const user_id = socket.handshake.auth._id
@@ -81,25 +108,20 @@ io.on('connection', (socket) => {
   }
   */
 
-  // middleware socket
-  io.use(async (socket, next) => {
-    const { Authorization } = socket.handshake.auth
-    const access_token = Authorization?.split(' ')[1]
+  // middleware cho socket instance
+  socket.use(async (packet, next) => {
+    const { access_token } = socket.handshake.auth
     try {
-      const decoded_authorization = await verifyAccessToken(access_token)
-      const { verify } = decoded_authorization as TokenPayload
-      if (verify !== UserVerifyStatus.Verified) {
-        throw new ErrorWithStatus({
-          message: USERS_MESSAGES.USER_NOT_VERIFIED,
-          status: HTTP_STATUS.FORBIDDEN
-        })
-      }
+      await verifyAccessToken(access_token)
     } catch (error) {
-      next({
-        message: 'Unauthorized',
-        name: 'UnauthorizedError',
-        data: error
-      })
+      next(new Error('Unauthorized'))
+    }
+  })
+
+  // catch lỗi từ middleware socket instance
+  socket.on('error', (error) => {
+    if (error.message === 'Unauthorized') {
+      socket.disconnect()
     }
   })
 
