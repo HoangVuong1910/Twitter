@@ -1,11 +1,16 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { CONVERSATIONS_MESSAGES } from '~/constants/messages'
+import { GetConversationsParams } from '~/models/requests/Conversation.requests'
 
 import { TokenPayload } from '~/models/requests/User.requests'
 import conversationsService from '~/services/conversations.services'
 
-export const getConversationsController = async (req: Request, res: Response, next: NextFunction) => {
+export const getConversationsController = async (
+  req: Request<GetConversationsParams, any, any>,
+  res: Response,
+  next: NextFunction
+) => {
   const { receiver_id } = req.params
   const sender_id = req.decoded_authorization?.user_id as string
   const limit = Number(req.query.limit)

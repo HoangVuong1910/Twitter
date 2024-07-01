@@ -19,6 +19,12 @@ import cors from 'cors'
 import Conversation from './models/schemas/Conversations.schema'
 import conversationsRouter from './routes/conversation.routes'
 import { ObjectId } from 'mongodb'
+import { verifyAccessToken } from './utils/commons'
+import { TokenPayload } from './models/requests/User.requests'
+import { UserVerifyStatus } from './constants/enums'
+import { ErrorWithStatus } from './models/Errors'
+import { USERS_MESSAGES } from './constants/messages'
+import HTTP_STATUS from './constants/httpStatus'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()
@@ -75,21 +81,43 @@ io.on('connection', (socket) => {
   }
   */
 
-  socket.on('private message', async (data) => {
-    const receiver_socket_id = users[data.to]?.socket_id
+  // middleware socket
+  io.use(async (socket, next) => {
+    const { Authorization } = socket.handshake.auth
+    const access_token = Authorization?.split(' ')[1]
+    try {
+      const decoded_authorization = await verifyAccessToken(access_token)
+      const { verify } = decoded_authorization as TokenPayload
+      if (verify !== UserVerifyStatus.Verified) {
+        throw new ErrorWithStatus({
+          message: USERS_MESSAGES.USER_NOT_VERIFIED,
+          status: HTTP_STATUS.FORBIDDEN
+        })
+      }
+    } catch (error) {
+      next({
+        message: 'Unauthorized',
+        name: 'UnauthorizedError',
+        data: error
+      })
+    }
+  })
+
+  socket.on('send_message', async (data) => {
+    const { receiver_id, sender_id, content } = data.payload
+    const receiver_socket_id = users[receiver_id]?.socket_id
     if (!receiver_socket_id) {
       return
     }
-    await databaseService.conversations.insertOne(
-      new Conversation({
-        sender_id: new ObjectId(data.from),
-        receiver_id: new ObjectId(data.to),
-        content: data.content
-      })
-    )
-    socket.to(receiver_socket_id).emit('receive private message', {
-      content: data.content,
-      from: user_id
+    const conversation = new Conversation({
+      sender_id: new ObjectId(sender_id),
+      receiver_id: new ObjectId(receiver_id),
+      content: content
+    })
+    const result = await databaseService.conversations.insertOne(conversation)
+    conversation._id = result.insertedId
+    socket.to(receiver_socket_id).emit('receive_message', {
+      payload: conversation
     })
   })
 

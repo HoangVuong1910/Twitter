@@ -12,6 +12,7 @@ import { TokenPayload } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
+import { verifyAccessToken } from '~/utils/commons'
 import { hashPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
 
@@ -108,7 +109,7 @@ const imageSchema: ParamSchema = {
   }
 }
 
-const followedUserIdSchema: ParamSchema = {
+const userIdChema: ParamSchema = {
   custom: {
     options: async (value: string, { req }) => {
       if (!ObjectId.isValid(value)) {
@@ -185,29 +186,30 @@ export const accessTokenValidator = checkSchema(
       custom: {
         options: async (value: string, { req }) => {
           const access_token = value.split(' ')[1]
-          console.log(access_token)
-          if (!access_token) {
-            throw new ErrorWithStatus({
-              message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-              status: HTTP_STATUS.UNAUTHORIZED
-            })
-          }
-          try {
-            const decoded_authorization = await verifyToken({
-              token: access_token,
-              secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
-            })
-            // req.decoded_authorization = decoded_authorization
-            ;(req as Request).decoded_authorization = decoded_authorization
-          } catch (error) {
-            if (error instanceof JsonWebTokenError) {
-              throw new ErrorWithStatus({
-                message: capitalize(error.message),
-                status: HTTP_STATUS.UNAUTHORIZED
-              })
-            }
-          }
-          return true
+          return await verifyAccessToken(access_token, req as Request)
+          // console.log(access_token)
+          // if (!access_token) {
+          //   throw new ErrorWithStatus({
+          //     message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+          //     status: HTTP_STATUS.UNAUTHORIZED
+          //   })
+          // }
+          // try {
+          //   const decoded_authorization = await verifyToken({
+          //     token: access_token,
+          //     secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+          //   })
+          //   // req.decoded_authorization = decoded_authorization
+          //   ;(req as Request).decoded_authorization = decoded_authorization
+          // } catch (error) {
+          //   if (error instanceof JsonWebTokenError) {
+          //     throw new ErrorWithStatus({
+          //       message: capitalize(error.message),
+          //       status: HTTP_STATUS.UNAUTHORIZED
+          //     })
+          //   }
+          // }
+          // return true
         }
       }
     }
@@ -465,14 +467,14 @@ export const updateMeValidator = checkSchema(
 
 export const followValidator = checkSchema(
   {
-    followed_user_id: followedUserIdSchema
+    followed_user_id: userIdChema
   },
   ['body']
 )
 
 export const UnfollowValidator = checkSchema(
   {
-    followed_user_id: followedUserIdSchema
+    followed_user_id: userIdChema
   },
   ['params']
 )
@@ -512,3 +514,10 @@ export const isUserLoggedInValidator = (middleware: (req: Request, res: Response
     next()
   }
 }
+
+export const getConversationsValidator = checkSchema(
+  {
+    receiver_id: userIdChema
+  },
+  ['params']
+)
