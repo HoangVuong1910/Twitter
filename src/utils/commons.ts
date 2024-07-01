@@ -11,7 +11,7 @@ export const numberEnumToArray = (numberEnum: { [key: string]: string | number }
 }
 
 export const verifyAccessToken = async (access_token: string, req?: Request) => {
-  console.log(access_token)
+  // console.log(access_token)
   if (!access_token) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
