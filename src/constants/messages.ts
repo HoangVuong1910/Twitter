@@ -85,3 +85,7 @@ export const SEARCH_MESSAGES = {
   MEDIA_TYPE_MUST_BE_A_IMAGE_OR_VIDEO: 'Media type must be a image or video',
   PEOPLE_FOLLOW_MUST_BE_AN_0_OR_1: 'People follow must be an 0 or'
 } as const
+
+export const CONVERSATIONS_MESSAGES = {
+  GET_CONVERSATION_SUCCESSFULLY: 'Get conversation successfully'
+}

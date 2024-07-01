@@ -17,6 +17,8 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
 import Conversation from './models/schemas/Conversations.schema'
+import conversationsRouter from './routes/conversation.routes'
+import { ObjectId } from 'mongodb'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()
@@ -43,6 +45,7 @@ app.use('/v1/api/tweets', tweetsRouter)
 app.use('/v1/api/bookmarks', bookmarksRoute)
 app.use('/v1/api/likes', likesRoute)
 app.use('/v1/api/search', searchRouter)
+app.use('/v1/api/conversations', conversationsRouter)
 
 // Serving file
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR)) // UPLOAD_IMAGE_DIR = path.resolve('uploads')
@@ -79,8 +82,8 @@ io.on('connection', (socket) => {
     }
     await databaseService.conversations.insertOne(
       new Conversation({
-        sender_id: data.from,
-        receiver_id: data.to,
+        sender_id: new ObjectId(data.from),
+        receiver_id: new ObjectId(data.to),
         content: data.content
       })
     )
