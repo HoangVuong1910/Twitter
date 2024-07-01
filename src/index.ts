@@ -15,6 +15,8 @@ import searchRouter from './routes/search.routes'
 // import '~/utils/fake'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import cors from 'cors'
+import Conversation from './models/schemas/Conversations.schema'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()
@@ -29,6 +31,8 @@ const port = process.env.PORT || 3056
 
 // Khởi tạo folder uploads
 initUploadFolder()
+// config cors
+app.use(cors())
 
 app.use(express.json())
 
@@ -53,10 +57,41 @@ const io = new Server(httpServer, {
     origin: 'http://localhost:3000'
   }
 })
-
+const users: { [key: string]: { socket_id: string } } = {}
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`)
+  const user_id = socket.handshake.auth._id
+  users[user_id] = {
+    socket_id: socket.id
+  }
+  // console.log(users)
+  /*
+  {
+  '66819789fe1f9ec1466f0425': { socket_id: 'LeFzaQJuj10-m4v3AAAF' },
+  '667d83c9ecb3a1e090e91364': { socket_id: '_MEBcnSARsXiBvEnAAAH' }
+  }
+  */
+
+  socket.on('private message', async (data) => {
+    const receiver_socket_id = users[data.to]?.socket_id
+    if (!receiver_socket_id) {
+      return
+    }
+    await databaseService.conversations.insertOne(
+      new Conversation({
+        sender_id: data.from,
+        receiver_id: data.to,
+        content: data.content
+      })
+    )
+    socket.to(receiver_socket_id).emit('receive private message', {
+      content: data.content,
+      from: user_id
+    })
+  })
+
   socket.on('disconnect', () => {
+    delete users[user_id]
     console.log(`user ${socket.id} disconnected`)
   })
 })
