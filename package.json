@@ -36,6 +36,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.606.0",
     "@faker-js/faker": "^8.4.1",
     "@types/minimist": "^1.2.5",
     "axios": "^1.7.2",
