@@ -12,7 +12,7 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import axios from 'axios'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
-import { sendVerifyRegisterEmail } from '~/utils/email'
+import { sendForgotPasswordEmail, sendVerifyRegisterEmail } from '~/utils/email'
 config()
 class UsersService {
   private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -326,8 +326,9 @@ class UsersService {
     }
   }
 
-  async resendVerifyEmail(user_id: string) {
+  async resendVerifyEmail(user_id: string, email: string) {
     const email_verify_token = await this.signEmailVerifyToken({ user_id, verify: UserVerifyStatus.Unverified })
+    await sendVerifyRegisterEmail(email, email_verify_token)
     console.log('Resend verify email', email_verify_token)
 
     await databaseService.users.updateOne(
@@ -343,7 +344,7 @@ class UsersService {
     )
   }
 
-  async forgotPassword({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+  async forgotPassword({ user_id, verify, email }: { user_id: string; verify: UserVerifyStatus; email: string }) {
     const forgot_password_token = await this.signForgotPasswordToken({ user_id, verify })
     await databaseService.users.updateOne(
       { _id: new ObjectId(user_id) },
@@ -358,6 +359,7 @@ class UsersService {
     )
     // Gửi email kèm đường link đến email người dùng
     console.log('forgot_password_token', forgot_password_token)
+    await sendForgotPasswordEmail(email, forgot_password_token)
   }
 
   async getMe(user_id: string) {

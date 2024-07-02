@@ -76,6 +76,26 @@ export const sendVerifyRegisterEmail = (
   return sendVerifyEmail(
     toAddress,
     'Verify your email',
-    template.replace('{{action_url}}', `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`)
+    template
+      .replace('{{title}}', 'Please verify your email')
+      .replace('{{content}}', 'Click the button below to verify your email')
+      .replace('{{titleLink}}', 'Verify your email')
+      .replace('{{action_url}}', `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`)
+  )
+}
+
+export const sendForgotPasswordEmail = (
+  toAddress: string,
+  forgot_password_token: string,
+  template: string = verifyEmailTemplate
+) => {
+  return sendVerifyEmail(
+    toAddress,
+    'Forgot Password',
+    template
+      .replace('{{title}}', 'You are receving this email because you requested to reset your password')
+      .replace('{{content}}', 'Click the button below to reset you password')
+      .replace('{{titleLink}}', 'Reset password')
+      .replace('{{action_url}}', `${process.env.CLIENT_URL}/reset-password?token=${forgot_password_token}`)
   )
 }

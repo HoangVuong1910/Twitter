@@ -126,7 +126,7 @@ export const resendVerifyEmailController = async (
       message: USERS_MESSAGES.EMAI_ALREADY_VERIFIED_BEFORE
     })
   }
-  await usersService.resendVerifyEmail(user_id)
+  await usersService.resendVerifyEmail(user_id, user.email)
   return res.status(200).json({
     message: USERS_MESSAGES.RESEND_VERIFY_EMAIL_SUCCESSFULLY
   })
@@ -140,9 +140,9 @@ export const forgotPasswordController = async (
   // const { user_id } = req.decoded_authorization as TokenPayload
   const user = req.user as User
   // const user_id = user._id as ObjectId
-  const { _id, verify } = user
+  const { _id, verify, email } = user
 
-  await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify })
+  await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify, email })
   return res.status(200).json({
     message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
   })
