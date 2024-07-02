@@ -17,7 +17,7 @@ import { createServer } from 'http'
 import cors from 'cors'
 import conversationsRouter from './routes/conversation.routes'
 import initSocket from './utils/socket'
-
+// import '~/utils/s3'
 config()
 databaseService.connect().then(() => {
   databaseService.indexUsers()

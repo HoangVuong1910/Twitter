@@ -17,7 +17,7 @@ export const defaultErrorHandler = (err: any, req: Request, res: Response, next:
       }
 
       finalError[key] = err[key]
-      // Object.defineProperty(err, key, { enumerable: true })
+      // Object.defineProperty(err, key, { enumerable: true }) // công dụng là để sửa đổi thuộc tính của object Error, thêm thuộc tính enumerable là true mục đích là mong muốn nó xuất hiện khi sử dụng stringify có nghĩa là trả về cho ng dùng mong muốn là xuất hiện như v
     })
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       // message: err.message,
