@@ -29,7 +29,7 @@ class MediasService {
         await sharp(file.filepath).jpeg().toFile(newPath) // Xử lý ảnh chuyển sang jpeg và lưu vào folder upload bằng method toFile()
         //upload file s3
         const s3Result = await uploadFileToS3({
-          filename: newFullFileName,
+          filename: 'images/' + newFullFileName,
           filepath: newPath,
           contentType: mime.getType(newPath) as string
         })
@@ -52,14 +52,28 @@ class MediasService {
 
   async uploadVideo(req: Request) {
     const files = await handleUploadVideo(req)
-    const result = files.map((file) => {
-      return {
-        url: isProduction
-          ? `${process.env.HOST}/static/video/${file.newFilename}`
-          : `http://localhost:${process.env.PORT}/v1/api/static/video/${file.newFilename}`,
-        type: MediaType.Video
-      }
-    })
+    const mime = (await import('mime')).default
+
+    const result: Media[] = await Promise.all(
+      files.map(async (file) => {
+        const s3Result = await uploadFileToS3({
+          filename: 'videos/' + file.newFilename,
+          filepath: file.filepath,
+          contentType: mime.getType(file.filepath) as string
+        })
+        // fsPromise.unlink(file.filepath)
+        return {
+          url: (s3Result as CompleteMultipartUploadCommandOutput).Location as string,
+          type: MediaType.Video
+        }
+        // return {
+        //   url: isProduction
+        //     ? `${process.env.HOST}/static/video/${file.newFilename}`
+        //     : `http://localhost:${process.env.PORT}/v1/api/static/video/${file.newFilename}`,
+        //   type: MediaType.Video
+        // }
+      })
+    )
     return result
   }
 }
