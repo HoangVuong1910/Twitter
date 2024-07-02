@@ -2,6 +2,8 @@
 /* eslint-disable no-undef */
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { config } from 'dotenv'
+import fs from 'fs'
+import path from 'path'
 
 config()
 // Create SES service object.
@@ -64,4 +66,16 @@ const sendVerifyEmail = (toAddress: string, subject: string, body: string) => {
   return sesClient.send(sendEmailCommand)
 }
 
-sendVerifyEmail('hoangdaden2003@gmail.com', 'Send mail từ aws ses service', '<h1>gửi mail thành công r nè</h1>')
+const verifyEmailTemplate = fs.readFileSync(path.resolve('src/templates/verify-email.html'), 'utf-8')
+
+export const sendVerifyRegisterEmail = (
+  toAddress: string,
+  email_verify_token: string,
+  template: string = verifyEmailTemplate
+) => {
+  return sendVerifyEmail(
+    toAddress,
+    'Verify your email',
+    template.replace('{{action_url}}', `${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}`)
+  )
+}

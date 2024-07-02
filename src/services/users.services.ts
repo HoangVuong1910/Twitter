@@ -7,12 +7,12 @@ import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
-import e from 'express'
 import { Follower } from '~/models/schemas/Follower.schema'
 import { USERS_MESSAGES } from '~/constants/messages'
 import axios from 'axios'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { sendVerifyRegisterEmail } from '~/utils/email'
 config()
 class UsersService {
   private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -133,6 +133,9 @@ class UsersService {
     //     }
     //   }
     // )
+
+    // gửi mail xác thực tài khoản cho người dùng khi đăng ký tài khoản, sử dụng aws ses service
+    await sendVerifyRegisterEmail(payload.email, email_verify_token)
 
     // return result
     return {
